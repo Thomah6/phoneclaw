@@ -112,7 +112,7 @@ export default function SettingsScreen() {
                                 style={styles.input}
                                 value={settings.baseUrl}
                                 onChangeText={v => update('baseUrl', v)}
-                                placeholder="https://openrouter.ai/api/v1"
+placeholder="https://api.groq.com/openai/v1"
                                 placeholderTextColor={palette.textMuted}
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -214,7 +214,7 @@ export default function SettingsScreen() {
 
                 {/* Footer */}
                 <View style={styles.footer}>
-                    <Text style={styles.footerText}>PhoneClaw v1.0.0</Text>
+<Text style={styles.footerText}>OpenDroid v0.1.0</Text>
                 </View>
             </ScrollView>
         </View>

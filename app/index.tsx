@@ -37,10 +37,15 @@ const uid = () => String(++msgId);
 
 /* ─── Suggestion Cards ─── */
 const SUGGESTIONS = [
-    { icon: 'chatbubble-ellipses-outline' as const, label: 'Send a WhatsApp message', desc: 'Open WhatsApp and type' },
-    { icon: 'notifications-outline' as const, label: 'Read my notifications', desc: 'Pull down notification shade' },
-    { icon: 'camera-outline' as const, label: 'Take a screenshot', desc: 'Capture current screen' },
-    { icon: 'search-outline' as const, label: 'Find and open an app', desc: 'Search through your apps' },
+    // { icon: 'chatbubble-ellipses-outline' as const, label: 'Send a WhatsApp message', desc: 'Open WhatsApp and type' },
+    // { icon: 'notifications-outline' as const, label: 'Read my notifications', desc: 'Pull down notification shade' },
+    // { icon: 'camera-outline' as const, label: 'Take a screenshot', desc: 'Capture current screen' },
+    // { icon: 'search-outline' as const, label: 'Find and open an app', desc: 'Search through your apps' },
+    { icon: 'chatbubble-ellipses-outline' as const, label: 'Envoie un message WhatsApp', desc: 'Ouvre WhatsApp et tape' },
+{ icon: 'notifications-outline' as const, label: 'Lis mes notifications', desc: 'Ouvre le panneau de notifs' },
+{ icon: 'camera-outline' as const, label: 'Prends un screenshot', desc: 'Capture l\'écran actuel' },
+{ icon: 'search-outline' as const, label: 'Ouvre une application', desc: 'Cherche parmi tes apps' },
+
 ];
 
 /* ─── Dashed Separator ─── */
@@ -143,10 +148,8 @@ const EmptyState = memo(({ onSend }: { onSend: (text: string) => void }) => (
             <View style={styles.emptyLogoWrap}>
                 <Text style={styles.emptyLogo}>🐾</Text>
             </View>
-            <Text style={styles.emptyTitle}>PhoneClaw</Text>
-            <Text style={styles.emptyDesc}>
-                AI-powered phone automation.{'\n'}Tell me what to do — I'll handle the rest.
-            </Text>
+            <Text style={styles.emptyTitle}>OpenDroid</Text>
+<Text style={styles.emptyDesc}>Ton agent IA pour Android.{'\n'}Dis-moi quoi faire — je m'en occupe.</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.suggestionsWrap}>
@@ -287,7 +290,7 @@ export default function ChatScreen() {
                         <View style={styles.assistantBubble}>
                             <View style={styles.assistantHeader}>
                                 <View style={styles.assistantDot} />
-                                <Text style={styles.assistantLabel}>PhoneClaw</Text>
+<Text style={styles.assistantLabel}>OpenDroid</Text>
                             </View>
                             <Text style={styles.assistantText}>{item.text}</Text>
                         </View>
@@ -325,7 +328,7 @@ export default function ChatScreen() {
             {/* ─── Header ─── */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={styles.headerTitle}>PhoneClaw</Text>
+<Text style={styles.headerTitle}>OpenDroid</Text>
                     {running && (
                         <Animated.View entering={FadeIn.duration(200)} style={styles.runBadge}>
                             <View style={styles.runDot} />
@@ -369,7 +372,7 @@ export default function ChatScreen() {
                         style={styles.input}
                         value={input}
                         onChangeText={setInput}
-                        placeholder="Message PhoneClaw..."
+                        placeholder="Dis quelque chose à OpenDroid..."
                         placeholderTextColor={palette.textMuted}
                         onSubmitEditing={() => handleSend()}
                         returnKeyType="send"

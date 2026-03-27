@@ -58,15 +58,27 @@ export interface AgentSettings {
     imageModel: string;
 }
 
+
+// Remplacer les defaults dans AgentSettings
 export const DEFAULT_SETTINGS: AgentSettings = {
-    apiKey: '',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    model: 'stepfun/step-3.5-flash:free',
-    maxSteps: 20,
-    safetyConfirmation: true,
-    imageCapability: true,
-    imageModel: '',
-};
+  apiKey: '',
+  baseUrl: 'https://api.groq.com/openai/v1',
+  model: 'llama-3.3-70b-versatile',
+  imageModel: 'llama-3.2-90b-vision-preview',  // ← celui-ci existe sur Groq
+  maxSteps: 20,
+  imageCapability: true,
+  safetyConfirmation: true,
+}
+
+// export const DEFAULT_SETTINGS: AgentSettings = {
+//     apiKey: '',
+//     baseUrl: 'https://openrouter.ai/api/v1',
+//     model: 'stepfun/step-3.5-flash:free',
+//     maxSteps: 20,
+//     safetyConfirmation: true,
+//     imageCapability: true,
+//     imageModel: '',
+// };
 
 export interface AgentCallbacks {
     onThinking: () => void;

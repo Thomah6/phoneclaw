@@ -65,7 +65,7 @@ export class TelegramService {
         console.log(`[Telegram] Msg from ${user} (${chatId}): ${text}`);
 
         if (text.startsWith('/start')) {
-            await this.sendMessage(chatId, `Hello ${user}! I am PhoneClaw. Send me a task.`);
+            await this.sendMessage(chatId, `Hello ${user}! I am OpenDroid 🤖. Send me a task and I will control your phone.`);
             return;
         }
 

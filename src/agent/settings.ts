@@ -6,12 +6,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AgentSettings, DEFAULT_SETTINGS } from './types';
 
-const STORAGE_KEY = 'phoneclaw_agent_settings';
-
+const STORAGE_KEY = 'opendroid_agent_settings';
 /** Read env vars set via .env (Expo auto-loads EXPO_PUBLIC_* vars) */
 function getEnvDefaults(): Partial<AgentSettings> {
     const env: Partial<AgentSettings> = {};
-    const key = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+    const key = process.env.EXPO_PUBLIC_GROQ_API_KEY;
     if (key) env.apiKey = key;
     const url = process.env.EXPO_PUBLIC_LLM_BASE_URL;
     if (url) env.baseUrl = url;

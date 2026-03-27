@@ -245,8 +245,7 @@ export class AgentCore {
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${apiKey}`,
-                'HTTP-Referer': 'https://github.com/phoneclaw/phoneclaw',
-                'X-Title': 'PhoneClaw Agent',
+                
             },
             body: JSON.stringify(body),
         });

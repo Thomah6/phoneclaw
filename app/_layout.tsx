@@ -5,7 +5,7 @@ import 'react-native-reanimated';
 
 import { palette } from '@/constants/theme';
 
-const phoneclawDark = {
+const openDroidDark = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
@@ -19,7 +19,7 @@ const phoneclawDark = {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={phoneclawDark}>
+<ThemeProvider value={openDroidDark}>
       <Stack
         screenOptions={{
           headerShown: false,
