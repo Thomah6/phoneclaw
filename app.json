@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "phoneclaw",
+    "name": "OpenDroid",
     "slug": "phoneclaw",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "phoneclaw",
+    "scheme": "opendroid",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

@@ -17,6 +17,7 @@ import { palette, radius, spacing, typography } from '@/constants/theme';
 import { loadSettings, saveSettings } from '@/src/agent/settings';
 import { AgentSettings, DEFAULT_SETTINGS } from '@/src/agent/types';
 import ClawAccessibilityModule from '@/src/native/ClawAccessibilityModule';
+import ClawOverlayModule from '@/src/native/ClawOverlayModule';
 import { ClawAccessibilityService } from '@/src/native/ClawAccessibilityService';
 
 export default function SettingsScreen() {
@@ -25,6 +26,7 @@ export default function SettingsScreen() {
     const [settings, setSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
     const [saved, setSaved] = useState(false);
     const [serviceRunning, setServiceRunning] = useState(false);
+    const [bubbleEnabled, setBubbleEnabled] = useState(false);
 
     useEffect(() => {
         loadSettings().then(setSettings);
@@ -39,6 +41,25 @@ export default function SettingsScreen() {
 
     const update = (key: keyof AgentSettings, value: any) => {
         setSettings(prev => ({ ...prev, [key]: value }));
+        setSaved(false);
+    };
+
+    const handleProviderSelect = (provider: 'groq' | 'gemini') => {
+        if (provider === 'gemini') {
+            setSettings(prev => ({
+                ...prev,
+                baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+                model: 'gemini-2.5-flash',
+                imageModel: 'gemini-2.5-flash',
+            }));
+        } else {
+            setSettings(prev => ({
+                ...prev,
+                baseUrl: 'https://api.groq.com/openai/v1',
+                model: 'llama-3.3-70b-versatile',
+                imageModel: 'llama-3.2-90b-vision-preview',
+            }));
+        }
         setSaved(false);
     };
 
@@ -90,10 +111,62 @@ export default function SettingsScreen() {
                     </View>
                 </Animated.View>
 
+                {/* Unicorn Features */}
+                <Animated.View entering={FadeInDown.delay(120).duration(300)}>
+                    <Text style={styles.sectionLabel}>LICORNE FEATURES</Text>
+                    <View style={styles.card}>
+                        <FieldRow label="Floating Bubble (Jarvis)">
+                            <Pressable
+                                style={[styles.toggleBtn, bubbleEnabled && styles.toggleBtnOn]}
+                                onPress={async () => {
+                                    if (bubbleEnabled) {
+                                        await ClawOverlayModule.hideBubble();
+                                        setBubbleEnabled(false);
+                                    } else {
+                                        const hasPerm = await ClawOverlayModule.hasPermission();
+                                        if (hasPerm) {
+                                            await ClawOverlayModule.showBubble();
+                                            setBubbleEnabled(true);
+                                        } else {
+                                            await ClawOverlayModule.requestOverlayPermission();
+                                        }
+                                    }
+                                }}
+                            >
+                                <Ionicons
+                                    name={bubbleEnabled ? 'chatbubbles' : 'chatbubbles-outline'}
+                                    size={16}
+                                    color={bubbleEnabled ? palette.bg0 : palette.textMuted}
+                                />
+                                <Text style={[styles.toggleText, bubbleEnabled && styles.toggleTextOn]}>
+                                    {bubbleEnabled ? 'Bubble Active' : 'Enable Bubble'}
+                                </Text>
+                            </Pressable>
+                        </FieldRow>
+                    </View>
+                </Animated.View>
+
                 {/* LLM Configuration */}
                 <Animated.View entering={FadeInDown.delay(160).duration(300)}>
                     <Text style={styles.sectionLabel}>LLM CONFIGURATION</Text>
                     <View style={styles.card}>
+                        <View style={styles.providerRow}>
+                            <Pressable 
+                                style={[styles.providerBtn, settings.baseUrl.includes('googleapis') ? styles.providerBtnActive : null]}
+                                onPress={() => handleProviderSelect('gemini')}
+                            >
+                                <Ionicons name="sparkles" size={16} color={settings.baseUrl.includes('googleapis') ? palette.bg0 : palette.textMuted} />
+                                <Text style={[styles.providerText, settings.baseUrl.includes('googleapis') && styles.providerTextActive]}>Gemini</Text>
+                            </Pressable>
+                            <Pressable 
+                                style={[styles.providerBtn, !settings.baseUrl.includes('googleapis') ? styles.providerBtnActive : null]}
+                                onPress={() => handleProviderSelect('groq')}
+                            >
+                                <Ionicons name="flash" size={16} color={!settings.baseUrl.includes('googleapis') ? palette.bg0 : palette.textMuted} />
+                                <Text style={[styles.providerText, !settings.baseUrl.includes('googleapis') && styles.providerTextActive]}>Groq</Text>
+                            </Pressable>
+                        </View>
+                        <View style={styles.divider} />
                         <FieldRow label="API Key">
                             <TextInput
                                 style={styles.input}
@@ -370,6 +443,37 @@ const styles = StyleSheet.create({
         borderColor: palette.borderLight,
     },
     resetText: { ...typography.bodySm, color: palette.textMuted },
+    
+    providerRow: {
+        flexDirection: 'row',
+        padding: spacing.md,
+        gap: spacing.sm,
+    },
+    providerBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+        paddingVertical: spacing.sm,
+        backgroundColor: palette.bg3,
+        borderRadius: radius.sm,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: palette.borderLight,
+    },
+    providerBtnActive: {
+        backgroundColor: palette.accent,
+        borderColor: palette.accent,
+    },
+    providerText: {
+        ...typography.bodySm,
+        color: palette.textSecondary,
+        fontWeight: '500',
+    },
+    providerTextActive: {
+        color: palette.bg0,
+        fontWeight: '600',
+    },
 
     footer: { alignItems: 'center', marginTop: spacing.xxxl, paddingBottom: spacing.lg },
     footerText: { ...typography.caption, color: palette.textMuted, textTransform: 'none', letterSpacing: 0 },

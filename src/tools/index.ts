@@ -1,5 +1,5 @@
 /**
- * PhoneClaw Tool Registry
+ * OpenDroid Tool Registry
  * 
  * Central registry for all agent tools. Each tool has:
  * - name: unique identifier
@@ -15,6 +15,8 @@ import { notificationTools } from './notifications';
 import { screenTools } from './screen';
 import { touchTools } from './touch';
 import { visionTools } from './vision';
+import { recordMemoryTool, recallMemoryTool } from './memory';
+import { macroTools } from './macro';
 
 export interface ToolParameter {
     name: string;
@@ -39,6 +41,11 @@ const allTools: Tool[] = [
     ...appTools,
     ...visionTools,
     ...notificationTools,
+    ...macroTools,
+    
+    // Memory
+    recordMemoryTool,
+    recallMemoryTool,
 ];
 
 // Quick lookup by name

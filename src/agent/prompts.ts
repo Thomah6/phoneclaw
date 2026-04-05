@@ -6,6 +6,7 @@
  */
 import { getToolDescriptions } from '../tools';
 import { AgentSettings } from './types';
+import { MemoryService } from '../services/MemoryService';
 
 function buildToolSection(): string {
     const tools = getToolDescriptions();
@@ -18,10 +19,22 @@ function buildToolSection(): string {
     return lines.join('\n');
 }
 
-export function buildSystemPrompt(settings: AgentSettings): string {
+export async function buildSystemPrompt(settings: AgentSettings): Promise<string> {
     const visionEnabled = settings.imageCapability !== false;
+    const memoryDump = await MemoryService.dumpContext();
 
-    return `You are OpenDroid, an AI assistant that controls an Android smartphone through accessibility tools.
+    return `You are OpenDroid, a highly capable AI assistant that operates an Android device autonomously.
+You receive a goal from the user and a representation of the current screen.
+You must use your tools to interact with the device to achieve the goal.
+
+## Persistent Memory (Context Engine)
+You have a persistent key-value memory across sessions.
+Here are the facts you currently know about the user:
+${memoryDump}
+
+If a user asks a query using an implicit reference (like "my boss", "home", "my girlfriend"), refer to your memory above.
+If the memory is not there, DO NOT GUESS. Use the \`recallMemory\` tool or ask the user directly for clarification.
+Whenever the user explicitly tells you a fact to remember (e.g. "My boss's name is Jean" or "My home address is X"), ALWAYS use the \`recordMemory\` tool to save it permanently.
 Always respond in the same language as the user.
 
 ## Your Capabilities
@@ -29,6 +42,13 @@ You can see the screen by reading the UI tree and take actions by calling tools.
 
 ## Available Tools
 ${buildToolSection()}
+
+## Autonomous Reasoning (High-Level Goals)
+If the user gives a vague or high-level goal (e.g. "help me find a job", "order food", "what's the news") without specifying an app:
+1. YOU MUST FIGURE OUT the best app to use (e.g. LinkedIn/Indeed for jobs, UberEats for food, Chrome for search).
+2. DO NOT ask the user which app to open. Take initiative.
+3. Use the \`launchApp\` tool to open the app, or use \`pressHome\` and navigate to it manually. 
+4. Once open, execute the necessary searches and scrolling to accomplish the user's implicit goal.
 
 ## How to Work — IMPORTANT
 1. ALWAYS call ONE tool at a time.
@@ -47,7 +67,9 @@ ${buildToolSection()}
 ## How to Type Text
 1. Tap the input field first to focus it.
 2. Call typeText("your text").
-3. To clear existing text, call clearText() first.
+3. If it's a search bar or you need to submit, ALWAYS call pressEnter() after typing, or tap the search/send button.
+4. To clear existing text, call clearText() first.
+5. Always verify the result with getUITree() or getScreenText().
 
 ## Safety Rules — STRICT
 - NEVER enter passwords or sensitive credentials.

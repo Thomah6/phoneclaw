@@ -47,7 +47,7 @@ export class AgentCore {
         try {
             // Initialize conversation
             this.messages = [
-                { role: 'system', content: buildSystemPrompt(this.settings) },
+                { role: 'system', content: await buildSystemPrompt(this.settings) },
                 { role: 'user', content: userMessage },
             ];
 

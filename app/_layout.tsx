@@ -34,6 +34,27 @@ export default function RootLayout() {
             animation: 'slide_from_bottom',
           }}
         />
+        <Stack.Screen
+          name="security"
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="history"
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_left',
+          }}
+        />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'fade',
+          }}
+        />
       </Stack>
       <StatusBar style="light" />
     </ThemeProvider>

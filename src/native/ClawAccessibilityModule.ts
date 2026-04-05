@@ -33,6 +33,7 @@ interface ClawAccessibilityInterface {
 
   // App management
   launchApp(packageName: string): Promise<boolean>;
+  getInstalledApps(): Promise<Array<{ label: string; packageName: string; icon?: string }>>;
 
   // Notifications
   getRecentNotifications(limit: number): Promise<Array<{
@@ -99,6 +100,7 @@ const ClawAccessibilityModule: ClawAccessibilityInterface = {
 
   // ─── App Management ─────────────────────────────────────────────
   launchApp: (packageName) => androidOnly(false, () => NativeClawModule.launchApp(packageName)),
+  getInstalledApps: () => androidOnly([], () => NativeClawModule.getInstalledApps()),
 
   // ─── Notifications ──────────────────────────────────────────────
   getRecentNotifications: (limit) => androidOnly([], () => NativeClawModule.getRecentNotifications(limit)),

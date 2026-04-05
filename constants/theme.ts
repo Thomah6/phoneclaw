@@ -1,58 +1,68 @@
 /**
- * PhoneClaw Design System
- * Neutral grey/black — shadcn-inspired
+ * OpenDroid Design System
+ * Electric Cyan + Deep Purple — AI-forward, distinct from OpenClaw (red)
  */
 
 import { Platform } from 'react-native';
 
-/* ─── Neutral Grey Palette (shadcn-inspired) ─── */
+/* ─── Brand Palette ─── */
 export const palette = {
-  // Backgrounds
+  // Backgrounds (premium light UI)
   black: '#000000',
-  bg0: '#09090B',       // zinc-950
-  bg1: '#0F0F12',       // slightly lifted
-  bg2: '#18181B',       // zinc-900
-  bg3: '#27272A',       // zinc-800
-  bg4: '#3F3F46',       // zinc-700
+  bg0: '#FFFFFF',       // pure white
+  bg1: '#F8FAFC',       // slate-50
+  bg2: '#F1F5F9',       // slate-100
+  bg3: '#E2E8F0',       // slate-200
+  bg4: '#CBD5E1',       // slate-300
 
   // Text
-  textPrimary: '#FAFAFA',     // zinc-50
-  textSecondary: '#A1A1AA',   // zinc-400
-  textTertiary: '#71717A',    // zinc-500
-  textMuted: '#52525B',       // zinc-600
+  textPrimary: '#0F172A',     // slate-900
+  textSecondary: '#334155',   // slate-700
+  textTertiary: '#64748B',    // slate-500
+  textMuted: '#94A3B8',       // slate-400
 
-  // Accent (white/neutral — shadcn primary)
-  accent: '#FAFAFA',
-  accentLight: '#FFFFFF',
-  accentDark: '#D4D4D8',      // zinc-300
-  accentGlow: 'rgba(250, 250, 250, 0.06)',
+  // Brand accent — Unicorn Violet
+  accent: '#A855F7',          // violet-500
+  accentLight: '#C084FC',
+  accentDark: '#7E22CE',
+  accentGlow: 'rgba(168, 85, 247, 0.08)',
+  accentSoft: 'rgba(168, 85, 247, 0.15)',
+
+  // Secondary accent — Sky Blue/Cyan
+  violet: '#0EA5E9',          // sky-500
+  violetLight: '#38BDF8',
+  violetGlow: 'rgba(14, 165, 233, 0.10)',
+
+  // Gradient endpoints (for decorative use)
+  gradientStart: '#A855F7',   // violet
+  gradientEnd: '#0EA5E9',     // sky
 
   // Semantic
   success: '#22C55E',         // green-500
-  successBg: 'rgba(34, 197, 94, 0.08)',
+  successBg: 'rgba(34, 197, 94, 0.10)',
   error: '#EF4444',           // red-500
-  errorBg: 'rgba(239, 68, 68, 0.08)',
+  errorBg: 'rgba(239, 68, 68, 0.10)',
   warning: '#F59E0B',
-  warningBg: 'rgba(245, 158, 11, 0.08)',
+  warningBg: 'rgba(245, 158, 11, 0.10)',
   info: '#3B82F6',
-  infoBg: 'rgba(59, 130, 246, 0.08)',
+  infoBg: 'rgba(59, 130, 246, 0.10)',
 
   // Tool colors
-  toolBlue: '#60A5FA',        // blue-400
-  toolBlueBg: 'rgba(96, 165, 250, 0.06)',
-  toolGreen: '#4ADE80',       // green-400
-  toolGreenBg: 'rgba(74, 222, 128, 0.06)',
+  toolBlue: '#3B82F6',        // blue-500
+  toolBlueBg: 'rgba(59, 130, 246, 0.08)',
+  toolGreen: '#10B981',       // emerald-500
+  toolGreenBg: 'rgba(16, 185, 129, 0.08)',
 
   // Borders
-  border: 'rgba(255, 255, 255, 0.06)',
-  borderLight: 'rgba(255, 255, 255, 0.10)',
-  borderMed: 'rgba(255, 255, 255, 0.14)',
-  borderAccent: 'rgba(250, 250, 250, 0.20)',
-  borderDashed: 'rgba(255, 255, 255, 0.08)',
+  border: 'rgba(15, 23, 42, 0.08)',
+  borderLight: 'rgba(15, 23, 42, 0.15)',
+  borderMed: 'rgba(15, 23, 42, 0.25)',
+  borderAccent: 'rgba(168, 85, 247, 0.25)',
+  borderDashed: 'rgba(15, 23, 42, 0.10)',
 
   // Overlay
-  overlay: 'rgba(0, 0, 0, 0.6)',
-  glass: 'rgba(15, 15, 18, 0.92)',
+  overlay: 'rgba(15, 23, 42, 0.5)',
+  glass: 'rgba(248, 250, 252, 0.90)',
 } as const;
 
 /* ─── Spacing (4px base) ─── */
@@ -85,7 +95,7 @@ const fontFamily = Platform.select({
 })!;
 
 export const typography = {
-  hero: { fontSize: 26, fontWeight: '700' as const, letterSpacing: -0.8, fontFamily: fontFamily.regular },
+  hero: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.8, fontFamily: fontFamily.regular },
   title: { fontSize: 18, fontWeight: '600' as const, letterSpacing: -0.3, fontFamily: fontFamily.regular },
   subtitle: { fontSize: 15, fontWeight: '500' as const, fontFamily: fontFamily.regular },
   body: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22, fontFamily: fontFamily.regular },
@@ -100,23 +110,30 @@ export const shadows = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 3,
     elevation: 2,
   },
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 6,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
     shadowRadius: 14,
     elevation: 8,
+  },
+  glow: {
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
 } as const;
 

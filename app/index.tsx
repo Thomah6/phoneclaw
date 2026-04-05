@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
+    Alert,
     FlatList,
     Keyboard,
     KeyboardAvoidingView,
@@ -25,27 +26,26 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 
 import { palette, radius, spacing, typography } from '@/constants/theme';
 import { AgentCore } from '@/src/agent/AgentCore';
 import { loadSettings } from '@/src/agent/settings';
 import { AgentSettings, DEFAULT_SETTINGS, UIMessage } from '@/src/agent/types';
 import ClawAccessibilityModule from '@/src/native/ClawAccessibilityModule';
+import { saveConversation } from '@/src/services/HistoryService';
+import { VoiceService } from '@/src/services/VoiceService';
 
 let msgId = Date.now();
 const uid = () => String(++msgId);
 
 /* ─── Suggestion Cards ─── */
 const SUGGESTIONS = [
-    // { icon: 'chatbubble-ellipses-outline' as const, label: 'Send a WhatsApp message', desc: 'Open WhatsApp and type' },
-    // { icon: 'notifications-outline' as const, label: 'Read my notifications', desc: 'Pull down notification shade' },
-    // { icon: 'camera-outline' as const, label: 'Take a screenshot', desc: 'Capture current screen' },
-    // { icon: 'search-outline' as const, label: 'Find and open an app', desc: 'Search through your apps' },
-    { icon: 'chatbubble-ellipses-outline' as const, label: 'Envoie un message WhatsApp', desc: 'Ouvre WhatsApp et tape' },
-{ icon: 'notifications-outline' as const, label: 'Lis mes notifications', desc: 'Ouvre le panneau de notifs' },
-{ icon: 'camera-outline' as const, label: 'Prends un screenshot', desc: 'Capture l\'écran actuel' },
-{ icon: 'search-outline' as const, label: 'Ouvre une application', desc: 'Cherche parmi tes apps' },
-
+    { icon: 'car-outline' as const, label: 'Commande un Uber', desc: 'Ouvre Uber et commande pour la maison' },
+    { icon: 'musical-notes-outline' as const, label: 'Mets de la musique', desc: 'Ouvre Spotify et lance un bon mix' },
+    { icon: 'restaurant-outline' as const, label: 'Trouve un resto', desc: 'Cherche un bon dîner sur Maps' },
+    { icon: 'paper-plane-outline' as const, label: 'Envoie une photo', desc: 'Partage la dernière photo sur WhatsApp' },
 ];
 
 /* ─── Dashed Separator ─── */
@@ -142,37 +142,77 @@ const ToolCard = memo(({
 });
 
 /* ─── Empty State Content ─── */
-const EmptyState = memo(({ onSend }: { onSend: (text: string) => void }) => (
-    <View style={styles.emptyContainer}>
-        <Animated.View entering={FadeIn.duration(500)} style={styles.emptyTop}>
-            <View style={styles.emptyLogoWrap}>
-                <Text style={styles.emptyLogo}>🐾</Text>
-            </View>
-            <Text style={styles.emptyTitle}>OpenDroid</Text>
-<Text style={styles.emptyDesc}>Ton agent IA pour Android.{'\n'}Dis-moi quoi faire — je m'en occupe.</Text>
-        </Animated.View>
+const APP_SPECIFIC_SUGGESTIONS: Record<string, { icon: any, label: string, desc: string }> = {
+    'com.whatsapp': { icon: 'logo-whatsapp', label: 'Envoie un message', desc: 'Dis bonjour sur WhatsApp' },
+    'com.spotify.music': { icon: 'musical-notes-outline', label: 'Mets de la musique', desc: 'Lance ta playlist Spotify' },
+    'com.ubercab': { icon: 'car-outline', label: 'Commande un Uber', desc: 'Pour rentrer à la maison' },
+    'com.google.android.apps.maps': { icon: 'map-outline', label: 'Trouve un resto', desc: 'Cherche un bon dîner sur Maps' },
+    'com.google.android.youtube': { icon: 'logo-youtube', label: 'Mets une vidéo', desc: 'Lance du Squeezie sur YouTube' },
+    'com.instagram.android': { icon: 'logo-instagram', label: 'Check Insta', desc: 'Ouvre Insta et regarde le feed' },
+};
 
-        <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.suggestionsWrap}>
-            <Text style={styles.suggestionsLabel}>Try something</Text>
-            <View style={styles.suggestionsGrid}>
-                {SUGGESTIONS.map((s, i) => (
-                    <Pressable
-                        key={i}
-                        style={({ pressed }) => [
-                            styles.suggestionCard,
-                            pressed && styles.suggestionCardPressed,
-                        ]}
-                        onPress={() => onSend(s.label)}
-                    >
-                        <Ionicons name={s.icon} size={18} color={palette.textTertiary} style={{ marginBottom: 6 }} />
-                        <Text style={styles.suggestionTitle}>{s.label}</Text>
-                        <Text style={styles.suggestionDesc}>{s.desc}</Text>
-                    </Pressable>
-                ))}
-            </View>
-        </Animated.View>
-    </View>
-));
+const EmptyState = memo(({ onSend }: { onSend: (text: string) => void }) => {
+    const [dynamicSuggestions, setDynamicSuggestions] = useState(SUGGESTIONS);
+
+    useEffect(() => {
+        ClawAccessibilityModule.getInstalledApps().then(apps => {
+            if (!apps || apps.length === 0) return;
+            
+            const matched: typeof SUGGESTIONS = [];
+            for (const app of apps) {
+                if (APP_SPECIFIC_SUGGESTIONS[app.packageName]) {
+                    matched.push(APP_SPECIFIC_SUGGESTIONS[app.packageName]);
+                }
+            }
+
+            // Shuffle and pick up to 4
+            const shuffled = matched.sort(() => 0.5 - Math.random());
+            let finalSuggestions = shuffled.slice(0, 4);
+
+            // Backfill with generic ones if we don't have 4
+            if (finalSuggestions.length < 4) {
+                const remaining = 4 - finalSuggestions.length;
+                finalSuggestions = [...finalSuggestions, ...SUGGESTIONS.slice(0, remaining)];
+            }
+            
+            setDynamicSuggestions(finalSuggestions);
+        }).catch(console.error);
+    }, []);
+
+    return (
+        <View style={styles.emptyContainer}>
+            <Animated.View entering={FadeIn.duration(500)} style={styles.emptyTop}>
+                <View style={styles.emptyLogoOuter}>
+                    <View style={styles.emptyLogoInner}>
+                        <Ionicons name="aperture" size={32} color={palette.accent} />
+                    </View>
+                </View>
+                <Text style={styles.emptyTitle}>OpenDroid</Text>
+                <Text style={styles.emptyDesc}>Ton agent IA pour Android.{'\n'}Dis-moi quoi faire — je m'en occupe.</Text>
+            </Animated.View>
+
+            <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.suggestionsWrap}>
+                <Text style={styles.suggestionsLabel}>Essaie quelque chose</Text>
+                <View style={styles.suggestionsGrid}>
+                    {dynamicSuggestions.map((s, i) => (
+                        <Pressable
+                            key={i}
+                            style={({ pressed }) => [
+                                styles.suggestionCard,
+                                pressed && styles.suggestionCardPressed,
+                            ]}
+                            onPress={() => onSend(s.label)}
+                        >
+                            <Ionicons name={s.icon} size={18} color={palette.textTertiary} style={{ marginBottom: 6 }} />
+                            <Text style={styles.suggestionTitle}>{s.label}</Text>
+                            <Text style={styles.suggestionDesc}>{s.desc}</Text>
+                        </Pressable>
+                    ))}
+                </View>
+            </Animated.View>
+        </View>
+    );
+});
 
 function formatTime(ts: number) {
     const d = new Date(ts);
@@ -190,16 +230,30 @@ export default function ChatScreen() {
     const inputRef = useRef('');
     const [running, setRunning] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
     const [settings, setSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
     const agentRef = useRef<AgentCore | null>(null);
     const listRef = useRef<FlatList>(null);
+    const voiceService = useRef(new VoiceService());
 
     useEffect(() => {
         inputRef.current = input;
     }, [input]);
 
     useEffect(() => {
-        loadSettings().then(setSettings);
+        const init = async () => {
+            const hasOnboarded = await AsyncStorage.getItem('opendroid_onboarding_done');
+            if (!hasOnboarded) {
+                router.replace('/onboarding' as any);
+                return;
+            }
+            const s = await loadSettings();
+            setSettings(s);
+            if (!s.apiKey) {
+                router.push('/settings' as any);
+            }
+        };
+        init();
     }, []);
 
     const scrollToEnd = useCallback(() => {
@@ -259,6 +313,12 @@ export default function ChatScreen() {
         agentRef.current = null;
         setRunning(false);
         setIsThinking(false);
+
+        // Save conversation to history
+        setMessages(cur => {
+            saveConversation(cur);
+            return cur;
+        });
     }, [running, settings, addMessage]);
 
     const handleStop = useCallback(() => {
@@ -266,6 +326,38 @@ export default function ChatScreen() {
         agentRef.current?.abort();
         ClawAccessibilityModule.stopAgentService();
     }, []);
+
+    const handleNewConversation = useCallback(() => {
+        if (running) return;
+        if (messages.length > 0) {
+            saveConversation(messages);
+        }
+        setMessages([]);
+    }, [running, messages]);
+
+    const handleMicPress = useCallback(async () => {
+        if (isRecording) {
+            setIsRecording(false);
+            const text = await voiceService.current.stopAndTranscribe(settings.apiKey, settings.baseUrl);
+            if (text) setInput(text);
+        } else {
+            setIsRecording(true);
+            try {
+                await voiceService.current.startRecording();
+            } catch (e: any) {
+                setIsRecording(false);
+                Alert.alert('Erreur micro', e.message || 'Impossible d\'accéder au micro.');
+            }
+        }
+    }, [isRecording, settings]);
+
+    // Handle Floating Bubble Clicks
+    useEffect(() => {
+        const sub = DeviceEventEmitter.addListener('onOverlayClicked', () => {
+            handleMicPress(); // Trigger voice recording globally
+        });
+        return () => sub.remove();
+    }, [handleMicPress]);
 
     /* ─── Message Renderer ─── */
     const renderMessage = useCallback(({ item, index }: { item: UIMessage; index: number }) => {
@@ -290,7 +382,7 @@ export default function ChatScreen() {
                         <View style={styles.assistantBubble}>
                             <View style={styles.assistantHeader}>
                                 <View style={styles.assistantDot} />
-<Text style={styles.assistantLabel}>OpenDroid</Text>
+                                <Text style={styles.assistantLabel}>OpenDroid</Text>
                             </View>
                             <Text style={styles.assistantText}>{item.text}</Text>
                         </View>
@@ -328,7 +420,7 @@ export default function ChatScreen() {
             {/* ─── Header ─── */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-<Text style={styles.headerTitle}>OpenDroid</Text>
+                    <Text style={styles.headerTitle}>OpenDroid</Text>
                     {running && (
                         <Animated.View entering={FadeIn.duration(200)} style={styles.runBadge}>
                             <View style={styles.runDot} />
@@ -337,6 +429,17 @@ export default function ChatScreen() {
                     )}
                 </View>
                 <View style={styles.headerRight}>
+                    <Pressable style={styles.headerIconBtn} onPress={() => router.push('/history' as any)}>
+                        <Ionicons name="time-outline" size={20} color={palette.textTertiary} />
+                    </Pressable>
+                    {messages.length > 0 && !running && (
+                        <Pressable style={styles.headerIconBtn} onPress={handleNewConversation}>
+                            <Ionicons name="add-circle-outline" size={20} color={palette.textTertiary} />
+                        </Pressable>
+                    )}
+                    <Pressable style={styles.headerIconBtn} onPress={() => router.push('/security' as any)}>
+                        <Ionicons name="shield-checkmark-outline" size={20} color={palette.textTertiary} />
+                    </Pressable>
                     <Pressable style={styles.headerIconBtn} onPress={() => router.push('/settings')}>
                         <Ionicons name="settings-outline" size={20} color={palette.textTertiary} />
                     </Pressable>
@@ -381,6 +484,23 @@ export default function ChatScreen() {
                         maxLength={2000}
                         blurOnSubmit={false}
                     />
+                    {/* Mic Button */}
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.micBtn,
+                            isRecording && styles.micBtnRecording,
+                            pressed && { opacity: 0.7 },
+                        ]}
+                        onPress={handleMicPress}
+                        disabled={running}
+                    >
+                        <Ionicons
+                            name={isRecording ? 'stop-circle' : 'mic-outline'}
+                            size={20}
+                            color={isRecording ? palette.error : palette.textTertiary}
+                        />
+                    </Pressable>
+                    {/* Send / Stop Button */}
                     <Pressable
                         style={({ pressed }) => [
                             styles.sendBtn,
@@ -392,7 +512,7 @@ export default function ChatScreen() {
                         disabled={!input.trim() && !running}
                     >
                         <Ionicons
-                            name={running ? "stop" : "arrow-up"}
+                            name={running ? 'stop' : 'arrow-up'}
                             size={18}
                             color={running ? palette.error : (input.trim() ? palette.bg0 : palette.textMuted)}
                         />
@@ -649,24 +769,35 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         paddingHorizontal: spacing.xl,
+        marginTop: 40,
     },
     emptyTop: {
         alignItems: 'center',
-        marginBottom: spacing.xxxl,
+        marginBottom: 40,
     },
-    emptyLogoWrap: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+    emptyLogoOuter: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: palette.accentSoft,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.xl,
+        shadowColor: palette.accent,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 15,
+        elevation: 10,
+    },
+    emptyLogoInner: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         backgroundColor: palette.bg2,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: spacing.lg,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: palette.borderLight,
-    },
-    emptyLogo: {
-        fontSize: 32,
+        borderWidth: 1,
+        borderColor: palette.accentSoft,
     },
     emptyTitle: {
         ...typography.hero,
@@ -674,10 +805,10 @@ const styles = StyleSheet.create({
         marginBottom: spacing.sm,
     },
     emptyDesc: {
-        ...typography.bodySm,
-        color: palette.textMuted,
+        ...typography.body,
+        color: palette.textSecondary,
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: 24,
     },
 
     /* ── Suggestions ── */
@@ -756,6 +887,17 @@ const styles = StyleSheet.create({
         paddingVertical: Platform.OS === 'ios' ? spacing.sm : spacing.xs,
         maxHeight: 120,
         minHeight: 36,
+    },
+    micBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 2,
+    },
+    micBtnRecording: {
+        backgroundColor: palette.errorBg,
     },
     sendBtn: {
         width: 32,

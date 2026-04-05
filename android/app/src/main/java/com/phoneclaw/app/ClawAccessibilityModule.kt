@@ -230,6 +230,52 @@ class ClawAccessibilityModule(private val reactContext: ReactApplicationContext)
         }
     }
 
+    @ReactMethod
+    fun getInstalledApps(promise: Promise) {
+        try {
+            val pm = reactContext.packageManager
+            val packages = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
+            val array = Arguments.createArray()
+            for (packageInfo in packages) {
+                val intent = pm.getLaunchIntentForPackage(packageInfo.packageName)
+                if (intent != null) {
+                    val map = Arguments.createMap()
+                    map.putString("packageName", packageInfo.packageName)
+                    map.putString("label", pm.getApplicationLabel(packageInfo).toString())
+
+                    try {
+                        val iconDrawable = pm.getApplicationIcon(packageInfo)
+                        var bitmap: android.graphics.Bitmap? = null
+                        if (iconDrawable is android.graphics.drawable.BitmapDrawable) {
+                            bitmap = iconDrawable.bitmap
+                        } else {
+                            if (iconDrawable.intrinsicWidth > 0 && iconDrawable.intrinsicHeight > 0) {
+                                bitmap = android.graphics.Bitmap.createBitmap(iconDrawable.intrinsicWidth, iconDrawable.intrinsicHeight, android.graphics.Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                iconDrawable.setBounds(0, 0, canvas.width, canvas.height)
+                                iconDrawable.draw(canvas)
+                            }
+                        }
+                        if (bitmap != null) {
+                            val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, 64, 64, true)
+                            val stream = java.io.ByteArrayOutputStream()
+                            scaled.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream)
+                            val base64 = android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP)
+                            map.putString("icon", base64)
+                        }
+                    } catch (e: Exception) {
+                        // Ignore icon extraction failure
+                    }
+
+                    array.pushMap(map)
+                }
+            }
+            promise.resolve(array)
+        } catch (e: Exception) {
+            promise.resolve(Arguments.createArray())
+        }
+    }
+
     // ─── Background Execution ────────────────────────────────────────
 
     @ReactMethod

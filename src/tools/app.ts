@@ -28,8 +28,8 @@ export const appTools: Tool[] = [
         },
     },
     {
-        name: 'returnToPhoneClaw',
-        description: 'Return to the PhoneClaw application',
+        name: 'returnToOpenDroid',
+        description: 'Return to the OpenDroid application',
         parameters: [],
         execute: async () => {
             return await ClawAccessibilityModule.launchApp('com.phoneclaw.app');

@@ -7,7 +7,10 @@ import com.facebook.react.uimanager.ViewManager
 
 class ClawAccessibilityPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(ClawAccessibilityModule(reactContext))
+        return listOf(
+            ClawAccessibilityModule(reactContext),
+            ClawOverlayModule(reactContext)
+        )
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
