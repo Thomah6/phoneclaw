@@ -31,27 +31,31 @@ class ClawOverlayService : Service() {
 
         floatingView = FrameLayout(this)
         
-        // Beautiful glowing circle for the unicorn bubble
-        val bgDrawable = GradientDrawable()
+        // Beautiful modern pill/bubble design
+        val bgDrawable = GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            intArrayOf(Color.parseColor("#1E293B"), Color.parseColor("#0F172A")) // Slate dark
+        )
         bgDrawable.shape = GradientDrawable.OVAL
-        bgDrawable.setColor(Color.parseColor("#05060F")) // Deep bg
-        bgDrawable.setStroke(4, Color.parseColor("#00E5FF")) // Electric Cyan border
-
+        bgDrawable.setStroke(3, Color.parseColor("#38BDF8")) // Modern sky blue border
+        
         val icon = ImageView(this)
         icon.background = bgDrawable
+        // Use a more appropriate native icon or generic mic icon
         icon.setImageResource(android.R.drawable.ic_btn_speak_now)
-        icon.setColorFilter(Color.parseColor("#00E5FF"))
-        icon.setPadding(30, 30, 30, 30)
+        icon.setColorFilter(Color.parseColor("#38BDF8")) // Sky blue tint
+        icon.setPadding(35, 35, 35, 35)
         
         // Add shadow/glow (Android elevation)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            icon.elevation = 20f
+            icon.elevation = 24f
+            icon.outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
         }
 
         floatingView.addView(icon)
 
         val params = WindowManager.LayoutParams(
-            160, 160, // Width, Height
+            170, 170, // Slightly larger Width, Height for premium feel
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
@@ -101,6 +105,15 @@ class ClawOverlayService : Service() {
                     }
                     MotionEvent.ACTION_UP -> {
                         if (isClick) {
+                            // Always bring the UI back to foreground first
+                            val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                            launchIntent?.apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                                // Only startActivity if intent is valid
+                                startActivity(this)
+                            }
+                            
+                            // Send the event directly to RN so it triggers the mic right when the app appears
                             ClawOverlayEventEmitter.sendEvent("onOverlayClicked", null)
                         }
                         return true

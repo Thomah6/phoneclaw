@@ -207,20 +207,28 @@ export class AgentCore {
             }
         }
 
+        // Optimization: Token saving sliding window
+        // Keep the system prompt + recent context (e.g. last 10 messages) to save tokens
+        const MAX_HISTORY = 10;
+        const systemPrompt = this.messages[0];
+        const recentMessages = this.messages.slice(Math.max(1, this.messages.length - MAX_HISTORY));
+        
+        let contextMessages = [systemPrompt, ...recentMessages];
+
         // Create a new messages array where older images are replaced with placeholders
-        const messagesToSend = this.messages.map((msg, index) => {
+        const messagesToSend = contextMessages.map((msg, index) => {
             // Keep the last image message as-is
-            if (index === lastImageIndex) return msg;
+            // We need to adjust lastImageIndex because it was based on this.messages array
+            const isLastImage = msg === this.messages[lastImageIndex];
+            if (isLastImage) return msg;
 
             // For older messages, if they have images, replace them
             if (Array.isArray(msg.content)) {
-                const containsImage = msg.content.some(c => c.type === 'image_url');
+                const containsImage = msg.content.some((c: any) => c.type === 'image_url');
                 if (containsImage) {
                     // Replace image parts with a text placeholder
-                    const newContent = msg.content.map(part => {
+                    const newContent = msg.content.map((part: any) => {
                         if (part.type === 'image_url') {
-                            // Cast to any to satisfy TS return type if needed, 
-                            // but TextPart is valid in MessageContent array
                             return { type: 'text', text: '[Image from previous step removed to save context]' };
                         }
                         return part;

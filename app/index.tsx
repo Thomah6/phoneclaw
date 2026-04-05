@@ -354,7 +354,11 @@ export default function ChatScreen() {
     // Handle Floating Bubble Clicks
     useEffect(() => {
         const sub = DeviceEventEmitter.addListener('onOverlayClicked', () => {
-            handleMicPress(); // Trigger voice recording globally
+            // Slight delay ensures the native Android Intent has fully reopened the main Activity
+            // and the Mic Permission dialog (if any) can render natively without immediate background suppression.
+            setTimeout(() => {
+                handleMicPress(); // Trigger voice recording globally
+            }, 300);
         });
         return () => sub.remove();
     }, [handleMicPress]);

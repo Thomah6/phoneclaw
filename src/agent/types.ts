@@ -59,12 +59,11 @@ export interface AgentSettings {
 }
 
 
-// Remplacer les defaults dans AgentSettings
 export const DEFAULT_SETTINGS: AgentSettings = {
   apiKey: '',
-  baseUrl: 'https://api.groq.com/openai/v1',
-  model: 'llama-3.3-70b-versatile',
-  imageModel: 'llama-3.2-90b-vision-preview',  // ← celui-ci existe sur Groq
+  baseUrl: 'https://api.llmapi.ai/v1',
+  model: 'gpt-4o',
+  imageModel: 'gpt-4o', 
   maxSteps: 20,
   imageCapability: true,
   safetyConfirmation: true,

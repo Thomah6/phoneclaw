@@ -44,7 +44,7 @@ export default function SettingsScreen() {
         setSaved(false);
     };
 
-    const handleProviderSelect = (provider: 'groq' | 'gemini') => {
+    const handleProviderSelect = (provider: 'groq' | 'gemini' | 'llmapi') => {
         if (provider === 'gemini') {
             setSettings(prev => ({
                 ...prev,
@@ -52,12 +52,19 @@ export default function SettingsScreen() {
                 model: 'gemini-2.5-flash',
                 imageModel: 'gemini-2.5-flash',
             }));
-        } else {
+        } else if (provider === 'groq') {
             setSettings(prev => ({
                 ...prev,
                 baseUrl: 'https://api.groq.com/openai/v1',
                 model: 'llama-3.3-70b-versatile',
                 imageModel: 'llama-3.2-90b-vision-preview',
+            }));
+        } else {
+            setSettings(prev => ({
+                ...prev,
+                baseUrl: 'https://api.llmapi.ai/v1',
+                model: 'gpt-4o',
+                imageModel: 'gpt-4o',
             }));
         }
         setSaved(false);
@@ -152,6 +159,13 @@ export default function SettingsScreen() {
                     <View style={styles.card}>
                         <View style={styles.providerRow}>
                             <Pressable 
+                                style={[styles.providerBtn, settings.baseUrl.includes('llmapi') ? styles.providerBtnActive : null]}
+                                onPress={() => handleProviderSelect('llmapi')}
+                            >
+                                <Ionicons name="hardware-chip" size={16} color={settings.baseUrl.includes('llmapi') ? palette.bg0 : palette.textMuted} />
+                                <Text style={[styles.providerText, settings.baseUrl.includes('llmapi') && styles.providerTextActive]}>LLM API</Text>
+                            </Pressable>
+                            <Pressable 
                                 style={[styles.providerBtn, settings.baseUrl.includes('googleapis') ? styles.providerBtnActive : null]}
                                 onPress={() => handleProviderSelect('gemini')}
                             >
@@ -159,11 +173,11 @@ export default function SettingsScreen() {
                                 <Text style={[styles.providerText, settings.baseUrl.includes('googleapis') && styles.providerTextActive]}>Gemini</Text>
                             </Pressable>
                             <Pressable 
-                                style={[styles.providerBtn, !settings.baseUrl.includes('googleapis') ? styles.providerBtnActive : null]}
+                                style={[styles.providerBtn, settings.baseUrl.includes('groq') ? styles.providerBtnActive : null]}
                                 onPress={() => handleProviderSelect('groq')}
                             >
-                                <Ionicons name="flash" size={16} color={!settings.baseUrl.includes('googleapis') ? palette.bg0 : palette.textMuted} />
-                                <Text style={[styles.providerText, !settings.baseUrl.includes('googleapis') && styles.providerTextActive]}>Groq</Text>
+                                <Ionicons name="flash" size={16} color={settings.baseUrl.includes('groq') ? palette.bg0 : palette.textMuted} />
+                                <Text style={[styles.providerText, settings.baseUrl.includes('groq') && styles.providerTextActive]}>Groq</Text>
                             </Pressable>
                         </View>
                         <View style={styles.divider} />
